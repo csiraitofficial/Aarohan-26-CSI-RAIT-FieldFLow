@@ -1004,10 +1004,7 @@ export default function Homepage() {
                                     </div>
                                 </div>
                                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>Transparent, fair, and efficient agricultural labour management for rural India.</p>
-                                <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(255,255,255,0.07)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", display: "inline-block" }}>
-                                    <div style={{ fontSize: 10, color: "#74c69d", fontWeight: 600, marginBottom: 2 }}>🏆 BUILT FOR</div>
-                                    <div style={{ fontSize: 12, color: "#fff", fontWeight: 700 }}>Innovation Hackathon 2025</div>
-                                </div>
+
                             </div>
                             <div>
                                 <h4 style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginBottom: 18 }}>Quick Links</h4>
@@ -1049,7 +1046,7 @@ export default function Homepage() {
                             </div>
                         </div>
                         <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-                            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>© 2025 KrishiSetu. Made with ❤️ for Indian Agriculture.</span>
+                            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>© 2026 KrishiSetu. Made with ❤️ for Indian Agriculture.</span>
                             <div style={{ display: "flex", gap: 20 }}>
                                 {["Privacy Policy", "Terms", "Support"].map(l => (
                                     <a key={l} href="#" style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, textDecoration: "none" }}
