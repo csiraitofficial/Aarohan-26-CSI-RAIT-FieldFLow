@@ -13,27 +13,30 @@ const roles = [
     label: "Farmer",
     icon: Sprout,
     description: "Request & manage farm labour",
-    color: "#4ade80",
-    bg: "rgba(74,222,128,0.08)",
-    border: "rgba(74,222,128,0.3)",
+    color: "#2d6a4f",
+    bg: "#f4fdf6",
+    border: "#b7e4c7",
+    accent: "#52b788",
   },
   {
     id: "supervisor",
     label: "Supervisor",
     icon: Users,
     description: "Manage labour groups",
-    color: "#60a5fa",
-    bg: "rgba(96,165,250,0.08)",
-    border: "rgba(96,165,250,0.3)",
+    color: "#774936",
+    bg: "#fdf6f3",
+    border: "#f4c0a0",
+    accent: "#c07850",
   },
   {
     id: "admin",
     label: "Admin",
     icon: ShieldCheck,
     description: "Full system control",
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.08)",
-    border: "rgba(245,158,11,0.3)",
+    color: "#1b4332",
+    bg: "#f0f7f3",
+    border: "#a8d5b8",
+    accent: "#2d6a4f",
   },
 ];
 
@@ -79,126 +82,123 @@ function Login() {
 
   return (
     <div style={styles.root}>
-      <Toaster position="top-center" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: "13px",
+            borderRadius: "10px",
+            border: "1px solid #e8f5e9",
+            boxShadow: "0 4px 20px rgba(27,67,50,0.08)",
+          },
+        }}
+      />
 
-      {/* Animated background blobs */}
-      <div style={styles.blob1} />
-      <div style={styles.blob2} />
-      <div style={styles.blob3} />
-
-      {/* Grid overlay */}
-      <div style={styles.grid} />
+      {/* Subtle texture */}
+      <div style={styles.texture} />
 
       <div style={styles.wrapper}>
-        {/* Left Panel */}
+
+        {/* ── LEFT COLUMN ── */}
         <motion.div
-          style={styles.leftPanel}
-          initial={{ opacity: 0, x: -60 }}
+          style={styles.left}
+          initial={{ opacity: 0, x: -32 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Logo */}
-          <div style={styles.logo}>
-            <div style={styles.logoIcon}>
-              <Leaf size={28} color="#4ade80" />
+          {/* Wordmark */}
+          <div style={styles.wordmark}>
+            <div style={styles.logoMark}>
+              <Leaf size={16} color="#ffffff" strokeWidth={2.5} />
             </div>
-            <span style={styles.logoText}>KrishiSetu</span>
+            <span style={styles.wordmarkText}>KrishiSetu</span>
           </div>
 
-          <motion.h1
-            style={styles.heroTitle}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-          >
-            Connecting
-            <br />
-            <span style={styles.heroAccent}>Farmers</span>
-            <br />
-            with Labour
-          </motion.h1>
-
-          <motion.p
-            style={styles.heroSubtitle}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            A smart platform to manage agricultural
-            labour efficiently across villages.
-          </motion.p>
+          {/* Headline */}
+          <div style={styles.headlineBlock}>
+            <p style={styles.eyebrow}>Agricultural Labour Platform</p>
+            <h1 style={styles.headline}>
+              The bridge between<br />
+              <em style={styles.headlineEm}>farms</em> and <em style={styles.headlineEm}>labour.</em>
+            </h1>
+            <p style={styles.body}>
+              A transparent, GPS-verified platform bringing
+              dignity and efficiency to rural Maharashtra's
+              agricultural workforce.
+            </p>
+          </div>
 
           {/* Stats */}
-          <motion.div
-            style={styles.statsRow}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
+          <div style={styles.statsRow}>
             {[
-              { value: "500+", label: "Farmers" },
-              { value: "50+", label: "Supervisors" },
-              { value: "2000+", label: "Labourers" },
-            ].map((stat) => (
-              <div key={stat.label} style={styles.statItem}>
-                <span style={styles.statValue}>{stat.value}</span>
-                <span style={styles.statLabel}>{stat.label}</span>
-              </div>
+              { value: "500+", label: "Farmers onboarded" },
+              { value: "50+", label: "Active supervisors" },
+              { value: "2,000+", label: "Labourers managed" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                style={styles.stat}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
+              >
+                <span style={styles.statValue}>{s.value}</span>
+                <span style={styles.statLabel}>{s.label}</span>
+              </motion.div>
             ))}
-          </motion.div>
+          </div>
+
+          {/* Decorative strip */}
+          <div style={styles.decorStrip}>
+            {["Attendance Tracking", "GPS Accountability", "Dual Confirmation", "Real-time Labour"].map((t) => (
+              <span key={t} style={styles.pill}>{t}</span>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Right Panel - Login Form */}
+        {/* ── RIGHT COLUMN ── */}
         <motion.div
-          style={styles.rightPanel}
-          initial={{ opacity: 0, x: 60 }}
+          style={styles.right}
+          initial={{ opacity: 0, x: 32 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div style={styles.formCard}>
-            {/* Form Header */}
-            <div style={styles.formHeader}>
-              <h2 style={styles.formTitle}>Welcome back</h2>
-              <p style={styles.formSubtitle}>Sign in to your account</p>
+          <div style={styles.card}>
+
+            {/* Card header */}
+            <div style={styles.cardHeader}>
+              <h2 style={styles.cardTitle}>Sign in</h2>
+              <p style={styles.cardSub}>Access your KrishiSetu account</p>
             </div>
 
-            {/* Role Selector */}
-            <div style={styles.roleContainer}>
+            {/* Role tabs */}
+            <div style={styles.roleTabs}>
               {roles.map((r) => {
                 const Icon = r.icon;
-                const isSelected = role === r.id;
+                const active = role === r.id;
                 return (
                   <motion.button
                     key={r.id}
-                    style={{
-                      ...styles.roleBtn,
-                      backgroundColor: isSelected ? r.bg : "transparent",
-                      border: `1.5px solid ${isSelected ? r.border : "rgba(255,255,255,0.08)"}`,
-                    }}
-                    onClick={() => setRole(r.id)}
                     type="button"
-                    whileHover={{ scale: 1.02 }}
+                    onClick={() => setRole(r.id)}
+                    style={{
+                      ...styles.roleTab,
+                      backgroundColor: active ? r.bg : "transparent",
+                      borderColor: active ? r.border : "#e8f0eb",
+                      color: active ? r.color : "#8aab97",
+                    }}
+                    whileHover={{ y: -1 }}
                     whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
                   >
-                    <Icon
-                      size={18}
-                      color={isSelected ? r.color : "#666"}
-                    />
-                    <span
-                      style={{
-                        ...styles.roleBtnLabel,
-                        color: isSelected ? r.color : "#888",
-                      }}
-                    >
-                      {r.label}
-                    </span>
-                    {isSelected && (
+                    <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+                    <span style={styles.roleTabLabel}>{r.label}</span>
+                    {active && (
                       <motion.div
-                        style={{
-                          ...styles.roleSelectedDot,
-                          backgroundColor: r.color,
-                        }}
-                        layoutId="selectedDot"
+                        layoutId="roleIndicator"
+                        style={{ ...styles.roleIndicator, backgroundColor: r.accent }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
                   </motion.button>
@@ -206,113 +206,130 @@ function Login() {
               })}
             </div>
 
-            {/* Role description */}
+            {/* Role hint */}
             <AnimatePresence mode="wait">
-              <motion.p
+              <motion.div
                 key={role}
-                style={{
-                  ...styles.roleDescription,
-                  color: selectedRole.color,
-                }}
-                initial={{ opacity: 0, y: -8 }}
+                style={{ ...styles.roleHint, borderLeftColor: selectedRole.accent }}
+                initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.18 }}
               >
-                {selectedRole.description}
-              </motion.p>
+                <span style={{ ...styles.roleHintText, color: selectedRole.color }}>
+                  {selectedRole.description}
+                </span>
+              </motion.div>
             </AnimatePresence>
 
             {/* Form */}
-            <form onSubmit={handleLogin}>
-              {/* Email */}
-              <div style={styles.inputGroup}>
-                <div style={styles.inputIcon}>
-                  <Mail size={16} color="#555" />
+            <form onSubmit={handleLogin} style={{ marginTop: "20px" }}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Email address</label>
+                <div style={styles.inputWrap}>
+                  <Mail size={14} color="#8aab97" style={styles.fieldIcon} />
+                  <input
+                    style={styles.input}
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    onFocus={(e) => {
+                      e.target.style.borderColor = selectedRole.accent;
+                      e.target.style.boxShadow = `0 0 0 3px ${selectedRole.bg}`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#dde8e2";
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
                 </div>
-                <input
-                  style={styles.input}
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
               </div>
 
-              {/* Password */}
-              <div style={styles.inputGroup}>
-                <div style={styles.inputIcon}>
-                  <Lock size={16} color="#555" />
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Password</label>
+                <div style={styles.inputWrap}>
+                  <Lock size={14} color="#8aab97" style={styles.fieldIcon} />
+                  <input
+                    style={styles.input}
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    onFocus={(e) => {
+                      e.target.style.borderColor = selectedRole.accent;
+                      e.target.style.boxShadow = `0 0 0 3px ${selectedRole.bg}`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#dde8e2";
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
                 </div>
-                <input
-                  style={styles.input}
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
               </div>
 
-              {/* Submit */}
               <motion.button
-                style={{
-                  ...styles.submitBtn,
-                  background: `linear-gradient(135deg, ${selectedRole.color}, ${selectedRole.color}aa)`,
-                }}
                 type="submit"
                 disabled={loading}
-                whileHover={{ scale: 1.02, opacity: 0.95 }}
-                whileTap={{ scale: 0.98 }}
+                style={{
+                  ...styles.submitBtn,
+                  background: `linear-gradient(135deg, ${selectedRole.accent}, ${selectedRole.color})`,
+                }}
+                whileHover={{ opacity: 0.92, y: -1 }}
+                whileTap={{ scale: 0.985 }}
+                transition={{ duration: 0.15 }}
               >
                 {loading ? (
                   <motion.div
                     style={styles.spinner}
                     animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                    transition={{ repeat: Infinity, duration: 0.75, ease: "linear" }}
                   />
                 ) : (
                   <>
-                    <span>Sign in as {selectedRole.label}</span>
-                    <ChevronRight size={18} />
+                    <span>Continue as {selectedRole.label}</span>
+                    <ChevronRight size={16} strokeWidth={2.5} />
                   </>
                 )}
               </motion.button>
             </form>
 
-            {/* Divider */}
-            <div style={styles.divider}>
-              <div style={styles.dividerLine} />
-              <span style={styles.dividerText}>or</span>
-              <div style={styles.dividerLine} />
+            {/* Footer */}
+            <div style={styles.cardFooter}>
+              {role === "farmer" && (
+                <>
+                  <div style={styles.divider}>
+                    <span style={styles.dividerLine} />
+                    <span style={styles.dividerWord}>or</span>
+                    <span style={styles.dividerLine} />
+                  </div>
+                  <motion.button
+                    style={styles.registerBtn}
+                    onClick={() => navigate("/register")}
+                    whileHover={{ backgroundColor: "#f4fdf6" }}
+                    whileTap={{ scale: 0.985 }}
+                  >
+                    New farmer? Create an account
+                  </motion.button>
+                </>
+              )}
+              {role === "supervisor" && (
+                <p style={styles.infoNote}>
+                  Supervisor accounts are provisioned by your Admin.
+                </p>
+              )}
+              {role === "admin" && (
+                <p style={styles.infoNote}>
+                  Admin access is restricted to authorised personnel.
+                </p>
+              )}
             </div>
 
-            {/* Register Link */}
-            {role === "farmer" && (
-              <motion.button
-                style={styles.registerBtn}
-                onClick={() => navigate("/register")}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                New farmer? Create account
-              </motion.button>
-            )}
-
-            {role === "supervisor" && (
-              <p style={styles.infoText}>
-                👷 Supervisor accounts are created by Admin
-              </p>
-            )}
-
-            {role === "admin" && (
-              <p style={styles.infoText}>
-                🔐 Admin access is restricted
-              </p>
-            )}
           </div>
         </motion.div>
+
       </div>
     </div>
   );
@@ -321,274 +338,305 @@ function Login() {
 const styles = {
   root: {
     minHeight: "100vh",
-    backgroundColor: "#080f0a",
+    backgroundColor: "#f7faf8",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    fontFamily: "'Poppins', 'Segoe UI', sans-serif",
     position: "relative",
-    overflow: "hidden",
-    fontFamily: "'Georgia', serif",
+    padding: "40px 24px",
   },
-  blob1: {
-    position: "absolute",
-    width: "600px",
-    height: "600px",
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(74,222,128,0.12) 0%, transparent 70%)",
-    top: "-200px",
-    left: "-200px",
-    pointerEvents: "none",
-  },
-  blob2: {
-    position: "absolute",
-    width: "500px",
-    height: "500px",
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(96,165,250,0.08) 0%, transparent 70%)",
-    bottom: "-150px",
-    right: "-100px",
-    pointerEvents: "none",
-  },
-  blob3: {
-    position: "absolute",
-    width: "300px",
-    height: "300px",
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    pointerEvents: "none",
-  },
-  grid: {
-    position: "absolute",
+  texture: {
+    position: "fixed",
     inset: 0,
-    backgroundImage: `
-      linear-gradient(rgba(74,222,128,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(74,222,128,0.03) 1px, transparent 1px)
-    `,
-    backgroundSize: "60px 60px",
+    backgroundImage: `radial-gradient(circle at 70% 10%, rgba(82,183,136,0.07) 0%, transparent 55%),
+                      radial-gradient(circle at 10% 80%, rgba(119,73,54,0.04) 0%, transparent 50%)`,
     pointerEvents: "none",
+    zIndex: 0,
   },
   wrapper: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    gap: "80px",
-    padding: "40px 24px",
+    gap: "72px",
     width: "100%",
-    maxWidth: "1100px",
+    maxWidth: "1040px",
     position: "relative",
     zIndex: 1,
     flexWrap: "wrap",
+    justifyContent: "center",
   },
-  leftPanel: {
-    flex: 1,
+
+  /* ── LEFT ── */
+  left: {
+    flex: "0 0 400px",
     minWidth: "280px",
-    maxWidth: "420px",
   },
-  logo: {
+  wordmark: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    marginBottom: "48px",
+    marginBottom: "52px",
   },
-  logoIcon: {
-    width: "44px",
-    height: "44px",
-    borderRadius: "12px",
-    backgroundColor: "rgba(74,222,128,0.1)",
-    border: "1px solid rgba(74,222,128,0.2)",
+  logoMark: {
+    width: "34px",
+    height: "34px",
+    borderRadius: "9px",
+    background: "linear-gradient(135deg, #2d6a4f, #1b4332)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    boxShadow: "0 2px 10px rgba(45,106,79,0.28)",
   },
-  logoText: {
-    fontSize: "22px",
+  wordmarkText: {
+    fontSize: "17px",
     fontWeight: "700",
-    color: "#ffffff",
-    letterSpacing: "-0.5px",
+    color: "#1b4332",
+    letterSpacing: "-0.3px",
   },
-  heroTitle: {
-    fontSize: "54px",
+  headlineBlock: {
+    marginBottom: "48px",
+  },
+  eyebrow: {
+    fontSize: "11px",
+    fontWeight: "600",
+    color: "#52b788",
+    letterSpacing: "2px",
+    textTransform: "uppercase",
+    margin: "0 0 14px 0",
+  },
+  headline: {
+    fontSize: "42px",
     fontWeight: "800",
-    color: "#ffffff",
-    lineHeight: 1.1,
-    margin: "0 0 20px 0",
-    letterSpacing: "-2px",
+    color: "#1b4332",
+    lineHeight: 1.18,
+    margin: "0 0 18px 0",
+    letterSpacing: "-1.5px",
   },
-  heroAccent: {
-    color: "#4ade80",
+  headlineEm: {
     fontStyle: "italic",
+    color: "#2d6a4f",
+    fontWeight: "800",
   },
-  heroSubtitle: {
-    fontSize: "16px",
-    color: "#888",
-    lineHeight: 1.7,
-    margin: "0 0 48px 0",
-    maxWidth: "320px",
+  body: {
+    fontSize: "14.5px",
+    color: "#5c7a6b",
+    lineHeight: 1.75,
+    margin: 0,
+    maxWidth: "340px",
   },
   statsRow: {
     display: "flex",
-    gap: "32px",
+    gap: "28px",
+    paddingTop: "4px",
+    marginBottom: "36px",
   },
-  statItem: {
+  stat: {
     display: "flex",
     flexDirection: "column",
+    gap: "3px",
   },
   statValue: {
-    fontSize: "24px",
+    fontSize: "22px",
     fontWeight: "800",
-    color: "#4ade80",
-    letterSpacing: "-1px",
+    color: "#1b4332",
+    letterSpacing: "-0.8px",
+    lineHeight: 1,
   },
   statLabel: {
-    fontSize: "12px",
-    color: "#666",
-    marginTop: "2px",
-    textTransform: "uppercase",
-    letterSpacing: "1px",
+    fontSize: "11px",
+    color: "#8aab97",
+    fontWeight: "500",
+    letterSpacing: "0.2px",
   },
-  rightPanel: {
-    flex: 1,
-    minWidth: "320px",
-    maxWidth: "420px",
+  decorStrip: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
   },
-  formCard: {
-    backgroundColor: "#0d1a11",
-    border: "1px solid rgba(74,222,128,0.1)",
-    borderRadius: "24px",
-    padding: "36px",
-    boxShadow: "0 25px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(74,222,128,0.05)",
+  pill: {
+    fontSize: "11px",
+    fontWeight: "500",
+    color: "#5c7a6b",
+    backgroundColor: "#eef7f1",
+    border: "1px solid #d8f0e2",
+    borderRadius: "20px",
+    padding: "4px 12px",
+    letterSpacing: "0.1px",
   },
-  formHeader: {
-    marginBottom: "28px",
+
+  /* ── RIGHT ── */
+  right: {
+    flex: "0 0 380px",
+    minWidth: "300px",
   },
-  formTitle: {
-    fontSize: "26px",
-    fontWeight: "700",
-    color: "#ffffff",
-    margin: "0 0 6px 0",
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: "20px",
+    border: "1px solid #e4ede8",
+    padding: "36px 32px 32px",
+    boxShadow: "0 4px 32px rgba(27,67,50,0.07), 0 1px 4px rgba(27,67,50,0.04)",
+  },
+  cardHeader: {
+    marginBottom: "24px",
+  },
+  cardTitle: {
+    fontSize: "22px",
+    fontWeight: "800",
+    color: "#1b4332",
+    margin: "0 0 5px",
     letterSpacing: "-0.5px",
   },
-  formSubtitle: {
-    fontSize: "14px",
-    color: "#666",
+  cardSub: {
+    fontSize: "13px",
+    color: "#8aab97",
     margin: 0,
+    fontWeight: "400",
   },
-  roleContainer: {
+
+  /* Role tabs */
+  roleTabs: {
     display: "flex",
-    gap: "8px",
+    gap: "7px",
     marginBottom: "12px",
   },
-  roleBtn: {
+  roleTab: {
     flex: 1,
-    padding: "10px 6px",
+    padding: "10px 6px 10px",
     borderRadius: "10px",
+    border: "1.5px solid",
     cursor: "pointer",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: "4px",
+    gap: "5px",
     position: "relative",
-    transition: "all 0.2s",
+    transition: "background-color 0.2s, border-color 0.2s, color 0.2s",
+    outline: "none",
   },
-  roleBtnLabel: {
+  roleTabLabel: {
     fontSize: "11px",
     fontWeight: "600",
-    letterSpacing: "0.5px",
+    letterSpacing: "0.3px",
   },
-  roleSelectedDot: {
+  roleIndicator: {
     position: "absolute",
-    bottom: "6px",
-    width: "4px",
-    height: "4px",
-    borderRadius: "50%",
+    bottom: "7px",
+    width: "16px",
+    height: "2.5px",
+    borderRadius: "2px",
   },
-  roleDescription: {
+  roleHint: {
+    borderLeft: "3px solid",
+    paddingLeft: "10px",
+    marginBottom: "4px",
+  },
+  roleHintText: {
     fontSize: "12px",
-    margin: "0 0 20px 0",
-    textAlign: "center",
-    fontStyle: "italic",
+    fontWeight: "500",
   },
-  inputGroup: {
+
+  /* Fields */
+  fieldGroup: {
+    marginBottom: "16px",
+  },
+  label: {
+    display: "block",
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#3d6352",
+    marginBottom: "7px",
+    letterSpacing: "0.2px",
+  },
+  inputWrap: {
     position: "relative",
-    marginBottom: "14px",
   },
-  inputIcon: {
+  fieldIcon: {
     position: "absolute",
-    left: "14px",
+    left: "13px",
     top: "50%",
     transform: "translateY(-50%)",
     pointerEvents: "none",
   },
   input: {
     width: "100%",
-    padding: "14px 14px 14px 42px",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: "12px",
-    fontSize: "14px",
-    color: "#ffffff",
+    padding: "11px 14px 11px 38px",
+    backgroundColor: "#fafcfb",
+    border: "1.5px solid #dde8e2",
+    borderRadius: "10px",
+    fontSize: "13.5px",
+    color: "#1a1a1a",
+    fontFamily: "'Poppins', sans-serif",
     boxSizing: "border-box",
     outline: "none",
-    transition: "border-color 0.2s",
+    transition: "border-color 0.18s, box-shadow 0.18s",
   },
   submitBtn: {
     width: "100%",
-    padding: "14px",
+    padding: "13px 18px",
     border: "none",
-    borderRadius: "12px",
-    fontSize: "15px",
+    borderRadius: "10px",
+    fontSize: "13.5px",
     fontWeight: "700",
-    color: "#080f0a",
+    color: "#ffffff",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
-    marginTop: "8px",
-    letterSpacing: "-0.3px",
+    gap: "7px",
+    marginTop: "6px",
+    letterSpacing: "0.1px",
+    boxShadow: "0 4px 18px rgba(45,106,79,0.25)",
+    fontFamily: "'Poppins', sans-serif",
   },
   spinner: {
-    width: "20px",
-    height: "20px",
-    border: "2px solid rgba(0,0,0,0.3)",
-    borderTop: "2px solid #080f0a",
+    width: "18px",
+    height: "18px",
+    border: "2px solid rgba(255,255,255,0.3)",
+    borderTop: "2px solid #ffffff",
     borderRadius: "50%",
+  },
+  cardFooter: {
+    marginTop: "18px",
   },
   divider: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
-    margin: "20px 0",
+    gap: "10px",
+    marginBottom: "14px",
   },
   dividerLine: {
     flex: 1,
     height: "1px",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "#eaeff0",
+    display: "block",
   },
-  dividerText: {
-    fontSize: "12px",
-    color: "#444",
+  dividerWord: {
+    fontSize: "11px",
+    color: "#b0c4bb",
+    fontWeight: "500",
+    letterSpacing: "0.5px",
   },
   registerBtn: {
     width: "100%",
-    padding: "13px",
+    padding: "12px",
     backgroundColor: "transparent",
-    border: "1px solid rgba(74,222,128,0.2)",
-    borderRadius: "12px",
-    fontSize: "14px",
-    color: "#4ade80",
+    border: "1.5px solid #dde8e2",
+    borderRadius: "10px",
+    fontSize: "13px",
+    color: "#2d6a4f",
     cursor: "pointer",
     fontWeight: "600",
-    letterSpacing: "-0.2px",
+    fontFamily: "'Poppins', sans-serif",
+    transition: "background-color 0.15s",
+    letterSpacing: "0.1px",
   },
-  infoText: {
+  infoNote: {
     textAlign: "center",
-    color: "#555",
-    fontSize: "13px",
+    color: "#9db8aa",
+    fontSize: "12.5px",
     margin: 0,
+    lineHeight: 1.6,
+    fontStyle: "italic",
   },
 };
 

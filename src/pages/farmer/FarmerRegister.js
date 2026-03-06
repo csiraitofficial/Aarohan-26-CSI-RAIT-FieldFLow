@@ -98,38 +98,47 @@ function FarmerRegister() {
     setLoading(false);
   };
 
-  // Success screen
+  const focusStyle = (e) => {
+    e.target.style.borderColor = "#52b788";
+    e.target.style.boxShadow = "0 0 0 3px #d8f3dc";
+  };
+  const blurStyle = (e) => {
+    e.target.style.borderColor = "#dde8e2";
+    e.target.style.boxShadow = "none";
+  };
+
+  // ── Success screen ──
   if (completed) {
     return (
       <div style={styles.root}>
-        <Toaster position="top-center" />
-        <div style={styles.blob1} />
-        <div style={styles.blob2} />
-        <div style={styles.grid} />
+        <Toaster position="top-center" toastOptions={toastOpts} />
+        <div style={styles.texture} />
         <motion.div
           style={styles.successCard}
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.88, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", duration: 0.6 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
           <motion.div
-            style={styles.successIcon}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring" }}
+            transition={{ delay: 0.25, type: "spring", stiffness: 300 }}
+            style={styles.successIconWrap}
           >
-            <CheckCircle2 size={48} color="#4ade80" />
+            <CheckCircle2 size={40} color="#2d6a4f" strokeWidth={2} />
           </motion.div>
           <h2 style={styles.successTitle}>Welcome to KrishiSetu!</h2>
           <p style={styles.successSubtitle}>
-            Your farmer account has been created. Redirecting to login...
+            Your farmer account has been created.<br />Redirecting to login…
           </p>
-          <motion.div
-            style={styles.successBar}
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 2.5, ease: "linear" }}
-          />
+          <div style={styles.successBarTrack}>
+            <motion.div
+              style={styles.successBarFill}
+              initial={{ width: 0 }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 2.5, ease: "linear" }}
+            />
+          </div>
         </motion.div>
       </div>
     );
@@ -137,356 +146,295 @@ function FarmerRegister() {
 
   return (
     <div style={styles.root}>
-      <Toaster position="top-center" />
-
-      {/* Background */}
-      <div style={styles.blob1} />
-      <div style={styles.blob2} />
-      <div style={styles.blob3} />
-      <div style={styles.grid} />
+      <Toaster position="top-center" toastOptions={toastOpts} />
+      <div style={styles.texture} />
 
       <div style={styles.wrapper}>
-        {/* Left Panel */}
+
+        {/* ── LEFT ── */}
         <motion.div
-          style={styles.leftPanel}
-          initial={{ opacity: 0, x: -60 }}
+          style={styles.left}
+          initial={{ opacity: 0, x: -32 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Logo */}
-          <div style={styles.logo}>
-            <div style={styles.logoIcon}>
-              <Leaf size={28} color="#4ade80" />
+          {/* Wordmark */}
+          <div style={styles.wordmark}>
+            <div style={styles.logoMark}>
+              <Leaf size={16} color="#fff" strokeWidth={2.5} />
             </div>
-            <span style={styles.logoText}>KrishiSetu</span>
+            <span style={styles.wordmarkText}>KrishiSetu</span>
           </div>
 
-          <h1 style={styles.heroTitle}>
-            Join the
-            <br />
-            <span style={styles.heroAccent}>Farming</span>
-            <br />
-            Revolution
+          <p style={styles.eyebrow}>Farmer Registration</p>
+          <h1 style={styles.headline}>
+            Join the<br />
+            <em style={styles.headlineEm}>farming</em><br />
+            revolution.
           </h1>
-
-          <p style={styles.heroSubtitle}>
-            Register as a farmer and get access to skilled agricultural
-            labour at your fingertips.
+          <p style={styles.body}>
+            Register and get access to skilled agricultural labour at your fingertips — GPS-verified, dual-confirmed, and transparent.
           </p>
 
-          {/* Steps Progress */}
-          <div style={styles.stepsContainer}>
-            {steps.map((step, index) => {
-              const isDone = currentStep > step.id;
-              const isActive = currentStep === step.id;
+          {/* Step tracker */}
+          <div style={styles.stepsTrack}>
+            {steps.map((step, i) => {
+              const done = currentStep > step.id;
+              const active = currentStep === step.id;
               return (
                 <motion.div
                   key={step.id}
-                  style={styles.stepItem}
-                  initial={{ opacity: 0, x: -20 }}
+                  style={styles.stepRow}
+                  initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 + 0.4 }}
+                  transition={{ delay: 0.2 + i * 0.1 }}
                 >
-                  <div
-                    style={{
+                  <div style={styles.stepLeft}>
+                    <div style={{
                       ...styles.stepDot,
-                      backgroundColor: isDone
-                        ? "#4ade80"
-                        : isActive
-                        ? "rgba(74,222,128,0.2)"
-                        : "rgba(255,255,255,0.05)",
-                      border: `2px solid ${
-                        isDone || isActive
-                          ? "#4ade80"
-                          : "rgba(255,255,255,0.1)"
-                      }`,
-                    }}
-                  >
-                    {isDone ? (
-                      <CheckCircle2 size={14} color="#080f0a" />
-                    ) : (
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          color: isActive ? "#4ade80" : "#444",
-                        }}
-                      >
-                        {step.id}
-                      </span>
+                      backgroundColor: done ? "#2d6a4f" : active ? "#d8f3dc" : "#f0f4f2",
+                      borderColor: done || active ? "#2d6a4f" : "#d0ddd8",
+                    }}>
+                      {done
+                        ? <CheckCircle2 size={13} color="#fff" strokeWidth={3} />
+                        : <span style={{ ...styles.stepNum, color: active ? "#2d6a4f" : "#a0bcaf" }}>{step.id}</span>
+                      }
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div style={{
+                        ...styles.stepLine,
+                        backgroundColor: currentStep > step.id ? "#52b788" : "#e4ede8",
+                      }} />
                     )}
                   </div>
-
-                  {index < steps.length - 1 && (
-                    <div
-                      style={{
-                        ...styles.stepConnector,
-                        backgroundColor:
-                          currentStep > step.id
-                            ? "#4ade80"
-                            : "rgba(255,255,255,0.08)",
-                      }}
-                    />
-                  )}
-
-                  <div style={styles.stepText}>
-                    <p
-                      style={{
-                        ...styles.stepTitle,
-                        color: isActive
-                          ? "#fff"
-                          : isDone
-                          ? "#4ade80"
-                          : "#444",
-                      }}
-                    >
+                  <div style={styles.stepInfo}>
+                    <p style={{ ...styles.stepTitle, color: active ? "#1b4332" : done ? "#2d6a4f" : "#a0bcaf" }}>
                       {step.title}
                     </p>
-                    <p style={styles.stepSubtitle}>{step.subtitle}</p>
+                    <p style={styles.stepSub}>{step.subtitle}</p>
                   </div>
                 </motion.div>
               );
             })}
           </div>
 
-          <motion.button
-            style={styles.backToLogin}
-            onClick={() => navigate("/login")}
-            whileHover={{ x: -4 }}
-          >
-            <ChevronLeft size={14} />
+          <button style={styles.backBtn} onClick={() => navigate("/login")}>
+            <ChevronLeft size={13} strokeWidth={2.5} />
             Back to login
-          </motion.button>
+          </button>
         </motion.div>
 
-        {/* Right Panel */}
+        {/* ── RIGHT ── */}
         <motion.div
-          style={styles.rightPanel}
-          initial={{ opacity: 0, x: 60 }}
+          style={styles.right}
+          initial={{ opacity: 0, x: 32 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div style={styles.formCard}>
+          <div style={styles.card}>
+
+            {/* Step badge + progress */}
+            <div style={styles.cardTopRow}>
+              <span style={styles.stepBadge}>Step {currentStep} of {steps.length}</span>
+              <div style={styles.progressTrack}>
+                <motion.div
+                  style={styles.progressFill}
+                  initial={{ width: `${((currentStep - 1) / steps.length) * 100}%` }}
+                  animate={{ width: `${(currentStep / steps.length) * 100}%` }}
+                  transition={{ duration: 0.4 }}
+                />
+              </div>
+            </div>
+
+            <div style={styles.cardHeader}>
+              <h2 style={styles.cardTitle}>{steps[currentStep - 1].title}</h2>
+              <p style={styles.cardSub}>{steps[currentStep - 1].subtitle}</p>
+            </div>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
-                initial={{ opacity: 0, y: -16 }}
+                initial={{ opacity: 0, y: -14 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 16 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: 14 }}
+                transition={{ duration: 0.25 }}
               >
-                {/* Step Header */}
-                <div style={styles.stepHeader}>
-                  <div style={styles.stepBadge}>
-                    Step {currentStep} of {steps.length}
-                  </div>
-                  <h2 style={styles.formTitle}>
-                    {steps[currentStep - 1].title}
-                  </h2>
-                  <p style={styles.formSubtitle}>
-                    {steps[currentStep - 1].subtitle}
-                  </p>
-                </div>
 
-                {/* Progress bar */}
-                <div style={styles.progressBar}>
-                  <motion.div
-                    style={styles.progressFill}
-                    initial={{
-                      width: `${((currentStep - 1) / steps.length) * 100}%`,
-                    }}
-                    animate={{
-                      width: `${(currentStep / steps.length) * 100}%`,
-                    }}
-                    transition={{ duration: 0.4 }}
-                  />
-                </div>
-
-                {/* Step 1 - Personal Info */}
+                {/* ── Step 1 ── */}
                 {currentStep === 1 && (
-                  <div style={styles.fieldsContainer}>
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <User size={16} color="#555" />
+                  <div style={styles.fields}>
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Full name</label>
+                      <div style={styles.inputWrap}>
+                        <User size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <input
+                          style={styles.input}
+                          type="text"
+                          placeholder="Your full name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          onFocus={focusStyle}
+                          onBlur={blurStyle}
+                        />
                       </div>
-                      <input
-                        style={styles.input}
-                        type="text"
-                        placeholder="Your full name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
                     </div>
 
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <Phone size={16} color="#555" />
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Mobile number</label>
+                      <div style={styles.inputWrap}>
+                        <Phone size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <input
+                          style={styles.input}
+                          type="tel"
+                          placeholder="10 digit phone number"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          maxLength={10}
+                          onFocus={focusStyle}
+                          onBlur={blurStyle}
+                        />
                       </div>
-                      <input
-                        style={styles.input}
-                        type="tel"
-                        placeholder="10 digit phone number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        maxLength={10}
-                      />
-                    </div>
-
-                    {phone.length > 0 && (
-                      <motion.div
-                        style={styles.phoneProgress}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <div style={styles.phoneProgressBar}>
-                          <motion.div
-                            style={{
-                              ...styles.phoneProgressFill,
-                              backgroundColor:
-                                phone.length === 10 ? "#4ade80" : "#f59e0b",
-                            }}
-                            animate={{
-                              width: `${(phone.length / 10) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span
-                          style={{
-                            ...styles.phoneCount,
-                            color:
-                              phone.length === 10 ? "#4ade80" : "#f59e0b",
-                          }}
+                      {phone.length > 0 && (
+                        <motion.div
+                          style={styles.phoneRow}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
                         >
-                          {phone.length}/10
-                        </span>
-                      </motion.div>
-                    )}
+                          <div style={styles.phoneMeterTrack}>
+                            <motion.div
+                              style={{
+                                ...styles.phoneMeterFill,
+                                backgroundColor: phone.length === 10 ? "#2d6a4f" : "#f59e0b",
+                              }}
+                              animate={{ width: `${(phone.length / 10) * 100}%` }}
+                              transition={{ duration: 0.15 }}
+                            />
+                          </div>
+                          <span style={{ ...styles.phoneCount, color: phone.length === 10 ? "#2d6a4f" : "#f59e0b" }}>
+                            {phone.length}/10
+                          </span>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {/* Step 2 - Account Setup */}
+                {/* ── Step 2 ── */}
                 {currentStep === 2 && (
-                  <div style={styles.fieldsContainer}>
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <Mail size={16} color="#555" />
+                  <div style={styles.fields}>
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Email address</label>
+                      <div style={styles.inputWrap}>
+                        <Mail size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <input
+                          style={styles.input}
+                          type="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          onFocus={focusStyle}
+                          onBlur={blurStyle}
+                        />
                       </div>
-                      <input
-                        style={styles.input}
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
                     </div>
 
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <Lock size={16} color="#555" />
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Password</label>
+                      <div style={styles.inputWrap}>
+                        <Lock size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <input
+                          style={styles.input}
+                          type="password"
+                          placeholder="Minimum 6 characters"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onFocus={focusStyle}
+                          onBlur={blurStyle}
+                        />
                       </div>
-                      <input
-                        style={styles.input}
-                        type="password"
-                        placeholder="Create password (min 6 chars)"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
                     </div>
 
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <Lock size={16} color="#555" />
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Confirm password</label>
+                      <div style={styles.inputWrap}>
+                        <Lock size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <input
+                          style={{
+                            ...styles.input,
+                            borderColor: confirmPassword
+                              ? password === confirmPassword ? "#52b788" : "#dc2626"
+                              : "#dde8e2",
+                          }}
+                          type="password"
+                          placeholder="Re-enter password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onFocus={(e) => { e.target.style.boxShadow = "0 0 0 3px #d8f3dc"; }}
+                          onBlur={(e) => { e.target.style.boxShadow = "none"; }}
+                        />
                       </div>
-                      <input
-                        style={{
-                          ...styles.input,
-                          borderColor:
-                            confirmPassword &&
-                            password !== confirmPassword
-                              ? "rgba(239,68,68,0.5)"
-                              : confirmPassword &&
-                                password === confirmPassword
-                              ? "rgba(74,222,128,0.5)"
-                              : "rgba(255,255,255,0.08)",
-                        }}
-                        type="password"
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
+                      {confirmPassword.length > 0 && (
+                        <motion.p
+                          style={{
+                            fontSize: "12px",
+                            marginTop: "6px",
+                            marginBottom: 0,
+                            fontWeight: "500",
+                            color: password === confirmPassword ? "#2d6a4f" : "#dc2626",
+                          }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords don't match"}
+                        </motion.p>
+                      )}
                     </div>
-
-                    {confirmPassword.length > 0 && (
-                      <motion.p
-                        style={{
-                          fontSize: "12px",
-                          margin: "-8px 0 0 0",
-                          color:
-                            password === confirmPassword
-                              ? "#4ade80"
-                              : "#ef4444",
-                        }}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        {password === confirmPassword
-                          ? "✅ Passwords match!"
-                          : "❌ Passwords don't match"}
-                      </motion.p>
-                    )}
                   </div>
                 )}
 
-                {/* Step 3 - Farm Details */}
+                {/* ── Step 3 ── */}
                 {currentStep === 3 && (
-                  <div style={styles.fieldsContainer}>
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <MapPin size={16} color="#555" />
+                  <div style={styles.fields}>
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Village / Town</label>
+                      <div style={styles.inputWrap}>
+                        <MapPin size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <input
+                          style={styles.input}
+                          type="text"
+                          placeholder="Village or town name"
+                          value={village}
+                          onChange={(e) => setVillage(e.target.value)}
+                          onFocus={focusStyle}
+                          onBlur={blurStyle}
+                        />
                       </div>
-                      <input
-                        style={styles.input}
-                        type="text"
-                        placeholder="Village / Town name"
-                        value={village}
-                        onChange={(e) => setVillage(e.target.value)}
-                      />
                     </div>
 
-                    {/* Farm Size */}
-                    <div style={styles.inputGroup}>
-                      <div style={styles.inputIcon}>
-                        <MapPin size={16} color="#555" />
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>Farm size</label>
+                      <div style={styles.inputWrap}>
+                        <MapPin size={14} color="#8aab97" style={styles.fieldIcon} />
+                        <select
+                          style={{ ...styles.input, color: farmSize ? "#1a1a1a" : "#8aab97" }}
+                          value={farmSize}
+                          onChange={(e) => setFarmSize(e.target.value)}
+                          onFocus={focusStyle}
+                          onBlur={blurStyle}
+                        >
+                          <option value="">Select farm size (acres)</option>
+                          <option value="small">Small — 1 to 5 acres</option>
+                          <option value="medium">Medium — 5 to 20 acres</option>
+                          <option value="large">Large — 20+ acres</option>
+                        </select>
                       </div>
-                      <select
-                        style={{
-                          ...styles.input,
-                          color: farmSize ? "#fff" : "#555",
-                        }}
-                        value={farmSize}
-                        onChange={(e) => setFarmSize(e.target.value)}
-                      >
-                        <option value="" style={{ backgroundColor: "#0d1a11", color: "#888" }}>
-                          Farm size (acres)
-                        </option>
-                        <option value="small" style={{ backgroundColor: "#0d1a11", color: "#fff" }}>
-                          Small (1-5 acres)
-                        </option>
-                        <option value="medium" style={{ backgroundColor: "#0d1a11", color: "#fff" }}>
-                          Medium (5-20 acres)
-                        </option>
-                        <option value="large" style={{ backgroundColor: "#0d1a11", color: "#fff" }}>
-                          Large (20+ acres)
-                        </option>
-                      </select>
                     </div>
 
-                    {/* Multi-select Crop Types */}
-                    <div>
-                      <p style={styles.cropLabel}>
-                        <Sprout size={14} color="#4ade80" />
-                        &nbsp; Select Crop Types (tap multiple)
-                      </p>
+                    <div style={styles.fieldGroup}>
+                      <label style={styles.label}>
+                        <Sprout size={13} color="#52b788" style={{ marginRight: "5px", verticalAlign: "middle" }} />
+                        Crop types <span style={{ color: "#a0bcaf", fontWeight: 400 }}>(select all that apply)</span>
+                      </label>
                       <div style={styles.cropGrid}>
                         {[
                           { value: "rice", label: "🌾 Rice" },
@@ -498,39 +446,29 @@ function FarmerRegister() {
                           { value: "pulses", label: "🫘 Pulses" },
                           { value: "other", label: "📝 Other" },
                         ].map((crop) => {
-                          const isSelected = cropType.includes(crop.value);
+                          const sel = cropType.includes(crop.value);
                           return (
                             <motion.button
                               key={crop.value}
                               type="button"
                               style={{
                                 ...styles.cropBtn,
-                                backgroundColor: isSelected
-                                  ? "rgba(74,222,128,0.15)"
-                                  : "rgba(255,255,255,0.03)",
-                                border: `1.5px solid ${
-                                  isSelected
-                                    ? "rgba(74,222,128,0.5)"
-                                    : "rgba(255,255,255,0.08)"
-                                }`,
-                                color: isSelected ? "#4ade80" : "#666",
+                                backgroundColor: sel ? "#f4fdf6" : "#fafcfb",
+                                borderColor: sel ? "#52b788" : "#dde8e2",
+                                color: sel ? "#2d6a4f" : "#5c7a6b",
                               }}
-                              onClick={() => {
-                                if (cropType.includes(crop.value)) {
-                                  setCropType(
-                                    cropType.filter((c) => c !== crop.value)
-                                  );
-                                } else {
-                                  setCropType([...cropType, crop.value]);
-                                }
-                              }}
-                              whileHover={{ scale: 1.04 }}
-                              whileTap={{ scale: 0.96 }}
+                              onClick={() =>
+                                setCropType(
+                                  sel
+                                    ? cropType.filter((c) => c !== crop.value)
+                                    : [...cropType, crop.value]
+                                )
+                              }
+                              whileHover={{ y: -1 }}
+                              whileTap={{ scale: 0.97 }}
                             >
-                              {crop.label}
-                              {isSelected && (
-                                <span style={styles.cropCheck}>✓</span>
-                              )}
+                              <span>{crop.label}</span>
+                              {sel && <span style={styles.cropTick}>✓</span>}
                             </motion.button>
                           );
                         })}
@@ -539,35 +477,42 @@ function FarmerRegister() {
 
                     {/* Summary */}
                     <motion.div
-                      style={styles.summaryBox}
-                      initial={{ opacity: 0, y: 10 }}
+                      style={styles.summary}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
-                      <p style={styles.summaryTitle}>📋 Account Summary</p>
-                      <p style={styles.summaryItem}>👤 {name}</p>
-                      <p style={styles.summaryItem}>📞 {phone}</p>
-                      <p style={styles.summaryItem}>📧 {email}</p>
-                      {cropType.length > 0 && (
-                        <p style={styles.summaryItem}>
-                          🌾 Crops: {cropType.join(", ")}
-                        </p>
-                      )}
+                      <p style={styles.summaryHeading}>Account summary</p>
+                      <div style={styles.summaryGrid}>
+                        <span style={styles.summaryKey}>Name</span>
+                        <span style={styles.summaryVal}>{name || "—"}</span>
+                        <span style={styles.summaryKey}>Phone</span>
+                        <span style={styles.summaryVal}>{phone || "—"}</span>
+                        <span style={styles.summaryKey}>Email</span>
+                        <span style={styles.summaryVal}>{email || "—"}</span>
+                        {cropType.length > 0 && (
+                          <>
+                            <span style={styles.summaryKey}>Crops</span>
+                            <span style={styles.summaryVal}>{cropType.join(", ")}</span>
+                          </>
+                        )}
+                      </div>
                     </motion.div>
                   </div>
                 )}
+
               </motion.div>
             </AnimatePresence>
 
-            {/* Navigation Buttons */}
-            <div style={styles.navButtons}>
+            {/* Nav buttons */}
+            <div style={styles.navRow}>
               {currentStep > 1 && (
                 <motion.button
                   style={styles.prevBtn}
                   onClick={prevStep}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <ChevronLeft size={18} />
+                  <ChevronLeft size={16} strokeWidth={2.5} />
                   Back
                 </motion.button>
               )}
@@ -576,453 +521,501 @@ function FarmerRegister() {
                 <motion.button
                   style={styles.nextBtn}
                   onClick={nextStep}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ opacity: 0.92, y: -1 }}
+                  whileTap={{ scale: 0.985 }}
                 >
                   Continue
-                  <ChevronRight size={18} />
+                  <ChevronRight size={16} strokeWidth={2.5} />
                 </motion.button>
               ) : (
                 <motion.button
                   style={styles.submitBtn}
                   onClick={handleRegister}
                   disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ opacity: 0.92, y: -1 }}
+                  whileTap={{ scale: 0.985 }}
                 >
                   {loading ? (
                     <motion.div
                       style={styles.spinner}
                       animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 0.8,
-                        ease: "linear",
-                      }}
+                      transition={{ repeat: Infinity, duration: 0.75, ease: "linear" }}
                     />
                   ) : (
                     <>
-                      <Sprout size={18} />
+                      <Sprout size={16} strokeWidth={2.2} />
                       Create Farmer Account
                     </>
                   )}
                 </motion.button>
               )}
             </div>
+
           </div>
         </motion.div>
+
       </div>
     </div>
   );
 }
 
+const toastOpts = {
+  style: {
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: "13px",
+    borderRadius: "10px",
+    border: "1px solid #e8f5e9",
+    boxShadow: "0 4px 20px rgba(27,67,50,0.08)",
+  },
+};
+
 const styles = {
   root: {
     minHeight: "100vh",
-    backgroundColor: "#080f0a",
+    backgroundColor: "#f7faf8",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    fontFamily: "'Poppins', 'Segoe UI', sans-serif",
     position: "relative",
-    overflow: "hidden",
-    fontFamily: "'Georgia', serif",
+    padding: "40px 24px",
   },
-  blob1: {
-    position: "absolute",
-    width: "600px",
-    height: "600px",
-    borderRadius: "50%",
-    background:
-      "radial-gradient(circle, rgba(74,222,128,0.12) 0%, transparent 70%)",
-    top: "-200px",
-    left: "-200px",
-    pointerEvents: "none",
-  },
-  blob2: {
-    position: "absolute",
-    width: "500px",
-    height: "500px",
-    borderRadius: "50%",
-    background:
-      "radial-gradient(circle, rgba(96,165,250,0.08) 0%, transparent 70%)",
-    bottom: "-150px",
-    right: "-100px",
-    pointerEvents: "none",
-  },
-  blob3: {
-    position: "absolute",
-    width: "300px",
-    height: "300px",
-    borderRadius: "50%",
-    background:
-      "radial-gradient(circle, rgba(74,222,128,0.06) 0%, transparent 70%)",
-    top: "50%",
-    right: "30%",
-    pointerEvents: "none",
-  },
-  grid: {
-    position: "absolute",
+  texture: {
+    position: "fixed",
     inset: 0,
-    backgroundImage: `
-      linear-gradient(rgba(74,222,128,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(74,222,128,0.03) 1px, transparent 1px)
-    `,
-    backgroundSize: "60px 60px",
+    backgroundImage: `radial-gradient(circle at 75% 8%, rgba(82,183,136,0.07) 0%, transparent 52%),
+                      radial-gradient(circle at 8% 85%, rgba(45,106,79,0.04) 0%, transparent 48%)`,
     pointerEvents: "none",
+    zIndex: 0,
   },
   wrapper: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "80px",
-    padding: "40px 24px",
+    alignItems: "flex-start",
+    gap: "72px",
     width: "100%",
-    maxWidth: "1100px",
+    maxWidth: "1040px",
     position: "relative",
     zIndex: 1,
     flexWrap: "wrap",
+    justifyContent: "center",
   },
-  leftPanel: {
-    flex: 1,
-    minWidth: "280px",
-    maxWidth: "380px",
+
+  /* ── LEFT ── */
+  left: {
+    flex: "0 0 360px",
+    minWidth: "260px",
+    paddingTop: "8px",
   },
-  logo: {
+  wordmark: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    marginBottom: "40px",
+    marginBottom: "44px",
   },
-  logoIcon: {
-    width: "44px",
-    height: "44px",
-    borderRadius: "12px",
-    backgroundColor: "rgba(74,222,128,0.1)",
-    border: "1px solid rgba(74,222,128,0.2)",
+  logoMark: {
+    width: "34px",
+    height: "34px",
+    borderRadius: "9px",
+    background: "linear-gradient(135deg, #2d6a4f, #1b4332)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    boxShadow: "0 2px 10px rgba(45,106,79,0.28)",
   },
-  logoText: {
-    fontSize: "22px",
+  wordmarkText: {
+    fontSize: "17px",
     fontWeight: "700",
-    color: "#ffffff",
-    letterSpacing: "-0.5px",
+    color: "#1b4332",
+    letterSpacing: "-0.3px",
   },
-  heroTitle: {
-    fontSize: "48px",
+  eyebrow: {
+    fontSize: "11px",
+    fontWeight: "600",
+    color: "#52b788",
+    letterSpacing: "2px",
+    textTransform: "uppercase",
+    margin: "0 0 12px 0",
+  },
+  headline: {
+    fontSize: "40px",
     fontWeight: "800",
-    color: "#ffffff",
-    lineHeight: 1.1,
-    margin: "0 0 20px 0",
-    letterSpacing: "-2px",
+    color: "#1b4332",
+    lineHeight: 1.18,
+    margin: "0 0 16px 0",
+    letterSpacing: "-1.5px",
   },
-  heroAccent: {
-    color: "#4ade80",
+  headlineEm: {
     fontStyle: "italic",
+    color: "#2d6a4f",
   },
-  heroSubtitle: {
-    fontSize: "15px",
-    color: "#666",
-    lineHeight: 1.7,
+  body: {
+    fontSize: "14px",
+    color: "#5c7a6b",
+    lineHeight: 1.75,
     margin: "0 0 40px 0",
   },
-  stepsContainer: {
+
+  /* Step tracker */
+  stepsTrack: {
     display: "flex",
     flexDirection: "column",
-    gap: "0px",
-    marginBottom: "40px",
+    marginBottom: "36px",
   },
-  stepItem: {
+  stepRow: {
     display: "flex",
     alignItems: "flex-start",
     gap: "14px",
-    position: "relative",
+  },
+  stepLeft: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
   },
   stepDot: {
-    width: "32px",
-    height: "32px",
+    width: "30px",
+    height: "30px",
     borderRadius: "50%",
+    border: "1.5px solid",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    zIndex: 1,
   },
-  stepConnector: {
-    position: "absolute",
-    left: "15px",
-    top: "32px",
-    width: "2px",
-    height: "32px",
+  stepNum: {
+    fontSize: "12px",
+    fontWeight: "700",
   },
-  stepText: {
-    paddingBottom: "28px",
+  stepLine: {
+    width: "1.5px",
+    height: "28px",
+    marginTop: "3px",
+  },
+  stepInfo: {
+    paddingTop: "4px",
+    paddingBottom: "20px",
   },
   stepTitle: {
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: "700",
-    margin: "6px 0 2px 0",
-    letterSpacing: "-0.3px",
+    margin: "0 0 2px 0",
+    letterSpacing: "-0.2px",
   },
-  stepSubtitle: {
+  stepSub: {
     fontSize: "12px",
-    color: "#444",
+    color: "#a0bcaf",
     margin: 0,
   },
-  backToLogin: {
+  backBtn: {
     display: "flex",
     alignItems: "center",
-    gap: "6px",
+    gap: "5px",
     backgroundColor: "transparent",
     border: "none",
-    color: "#555",
+    color: "#8aab97",
     cursor: "pointer",
-    fontSize: "13px",
+    fontSize: "12.5px",
+    fontWeight: "500",
+    fontFamily: "'Poppins', sans-serif",
     padding: 0,
   },
-  rightPanel: {
-    flex: 1,
-    minWidth: "320px",
-    maxWidth: "440px",
+
+  /* ── RIGHT ── */
+  right: {
+    flex: "0 0 400px",
+    minWidth: "300px",
   },
-  formCard: {
-    backgroundColor: "#0d1a11",
-    border: "1px solid rgba(74,222,128,0.1)",
-    borderRadius: "24px",
-    padding: "36px",
-    boxShadow: "0 25px 80px rgba(0,0,0,0.5)",
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: "20px",
+    border: "1px solid #e4ede8",
+    padding: "32px 30px 28px",
+    boxShadow: "0 4px 32px rgba(27,67,50,0.07), 0 1px 4px rgba(27,67,50,0.04)",
   },
-  stepHeader: {
+  cardTopRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
     marginBottom: "20px",
   },
   stepBadge: {
-    display: "inline-block",
-    backgroundColor: "rgba(74,222,128,0.1)",
-    border: "1px solid rgba(74,222,128,0.2)",
-    color: "#4ade80",
     fontSize: "11px",
-    fontWeight: "700",
-    padding: "4px 12px",
+    fontWeight: "600",
+    color: "#2d6a4f",
+    backgroundColor: "#eef7f1",
+    border: "1px solid #b7e4c7",
     borderRadius: "20px",
-    marginBottom: "12px",
-    letterSpacing: "0.5px",
-    textTransform: "uppercase",
+    padding: "3px 11px",
+    whiteSpace: "nowrap",
+    letterSpacing: "0.3px",
   },
-  formTitle: {
-    fontSize: "24px",
-    fontWeight: "700",
-    color: "#ffffff",
-    margin: "0 0 4px 0",
-    letterSpacing: "-0.5px",
-  },
-  formSubtitle: {
-    fontSize: "13px",
-    color: "#555",
-    margin: "0 0 20px 0",
-  },
-  progressBar: {
+  progressTrack: {
+    flex: 1,
     height: "3px",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "#e8f0eb",
     borderRadius: "2px",
-    marginBottom: "28px",
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#4ade80",
+    backgroundColor: "#52b788",
     borderRadius: "2px",
   },
-  fieldsContainer: {
+  cardHeader: {
+    marginBottom: "22px",
+  },
+  cardTitle: {
+    fontSize: "21px",
+    fontWeight: "800",
+    color: "#1b4332",
+    margin: "0 0 4px",
+    letterSpacing: "-0.5px",
+  },
+  cardSub: {
+    fontSize: "13px",
+    color: "#8aab97",
+    margin: 0,
+  },
+
+  /* Fields */
+  fields: {
     display: "flex",
     flexDirection: "column",
-    gap: "14px",
+    gap: "16px",
   },
-  inputGroup: {
+  fieldGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0px",
+  },
+  label: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#3d6352",
+    marginBottom: "7px",
+    display: "block",
+    letterSpacing: "0.1px",
+  },
+  inputWrap: {
     position: "relative",
   },
-  inputIcon: {
+  fieldIcon: {
     position: "absolute",
-    left: "14px",
+    left: "13px",
     top: "50%",
     transform: "translateY(-50%)",
     pointerEvents: "none",
-    zIndex: 1,
   },
   input: {
     width: "100%",
-    padding: "14px 14px 14px 42px",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: "12px",
-    fontSize: "14px",
-    color: "#ffffff",
+    padding: "11px 14px 11px 38px",
+    backgroundColor: "#fafcfb",
+    border: "1.5px solid #dde8e2",
+    borderRadius: "10px",
+    fontSize: "13.5px",
+    color: "#1a1a1a",
+    fontFamily: "'Poppins', sans-serif",
     boxSizing: "border-box",
     outline: "none",
+    transition: "border-color 0.18s, box-shadow 0.18s",
     appearance: "none",
     WebkitAppearance: "none",
   },
-  phoneProgress: {
+
+  /* Phone meter */
+  phoneRow: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    marginTop: "-6px",
+    marginTop: "7px",
   },
-  phoneProgressBar: {
+  phoneMeterTrack: {
     flex: 1,
     height: "3px",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "#e8f0eb",
     borderRadius: "2px",
     overflow: "hidden",
   },
-  phoneProgressFill: {
+  phoneMeterFill: {
     height: "100%",
     borderRadius: "2px",
-    transition: "width 0.2s",
+    transition: "width 0.15s",
   },
   phoneCount: {
     fontSize: "11px",
     fontWeight: "700",
-    minWidth: "30px",
+    minWidth: "28px",
   },
-  cropLabel: {
-    display: "flex",
-    alignItems: "center",
-    fontSize: "13px",
-    color: "#888",
-    margin: "0 0 10px 0",
-    fontWeight: "600",
-  },
+
+  /* Crop grid */
   cropGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: "8px",
+    gap: "7px",
+    marginTop: "4px",
   },
   cropBtn: {
-    padding: "10px 12px",
-    borderRadius: "10px",
+    padding: "9px 12px",
+    borderRadius: "9px",
+    border: "1.5px solid",
     cursor: "pointer",
-    fontSize: "13px",
+    fontSize: "12.5px",
     fontWeight: "600",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    transition: "all 0.2s",
+    fontFamily: "'Poppins', sans-serif",
+    transition: "border-color 0.15s, background-color 0.15s",
   },
-  cropCheck: {
+  cropTick: {
     fontSize: "12px",
     fontWeight: "800",
-    color: "#4ade80",
+    color: "#2d6a4f",
   },
-  summaryBox: {
-    backgroundColor: "rgba(74,222,128,0.05)",
-    border: "1px solid rgba(74,222,128,0.1)",
+
+  /* Summary */
+  summary: {
+    backgroundColor: "#f4fdf6",
+    border: "1px solid #b7e4c7",
     borderRadius: "12px",
     padding: "16px",
-    marginTop: "8px",
   },
-  summaryTitle: {
-    fontSize: "12px",
+  summaryHeading: {
+    fontSize: "11px",
     fontWeight: "700",
-    color: "#4ade80",
-    margin: "0 0 10px 0",
+    color: "#2d6a4f",
     textTransform: "uppercase",
-    letterSpacing: "0.5px",
+    letterSpacing: "1px",
+    margin: "0 0 12px 0",
   },
-  summaryItem: {
-    fontSize: "13px",
-    color: "#888",
-    margin: "4px 0",
+  summaryGrid: {
+    display: "grid",
+    gridTemplateColumns: "auto 1fr",
+    gap: "5px 16px",
   },
-  navButtons: {
+  summaryKey: {
+    fontSize: "12px",
+    color: "#8aab97",
+    fontWeight: "500",
+  },
+  summaryVal: {
+    fontSize: "12px",
+    color: "#1b4332",
+    fontWeight: "600",
+    wordBreak: "break-all",
+  },
+
+  /* Nav */
+  navRow: {
     display: "flex",
-    gap: "12px",
-    marginTop: "28px",
+    gap: "10px",
+    marginTop: "26px",
   },
   prevBtn: {
     flex: 1,
-    padding: "13px",
+    padding: "12px",
     backgroundColor: "transparent",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: "12px",
-    color: "#666",
+    border: "1.5px solid #dde8e2",
+    borderRadius: "10px",
+    color: "#5c7a6b",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "6px",
-    fontSize: "14px",
+    gap: "5px",
+    fontSize: "13px",
     fontWeight: "600",
+    fontFamily: "'Poppins', sans-serif",
   },
   nextBtn: {
     flex: 2,
-    padding: "13px",
-    backgroundColor: "rgba(74,222,128,0.15)",
-    border: "1px solid rgba(74,222,128,0.3)",
-    borderRadius: "12px",
-    color: "#4ade80",
+    padding: "12px",
+    background: "linear-gradient(135deg, #52b788, #2d6a4f)",
+    border: "none",
+    borderRadius: "10px",
+    color: "#ffffff",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "6px",
-    fontSize: "14px",
+    fontSize: "13.5px",
     fontWeight: "700",
+    fontFamily: "'Poppins', sans-serif",
+    boxShadow: "0 4px 18px rgba(45,106,79,0.22)",
+    letterSpacing: "0.1px",
   },
   submitBtn: {
     flex: 2,
-    padding: "13px",
-    background: "linear-gradient(135deg, #4ade80, #22c55e)",
+    padding: "12px",
+    background: "linear-gradient(135deg, #52b788, #1b4332)",
     border: "none",
-    borderRadius: "12px",
-    color: "#080f0a",
+    borderRadius: "10px",
+    color: "#ffffff",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "8px",
-    fontSize: "14px",
-    fontWeight: "800",
-    letterSpacing: "-0.3px",
+    gap: "7px",
+    fontSize: "13.5px",
+    fontWeight: "700",
+    fontFamily: "'Poppins', sans-serif",
+    boxShadow: "0 4px 18px rgba(45,106,79,0.25)",
+    letterSpacing: "0.1px",
   },
   spinner: {
-    width: "20px",
-    height: "20px",
-    border: "2px solid rgba(0,0,0,0.2)",
-    borderTop: "2px solid #080f0a",
+    width: "18px",
+    height: "18px",
+    border: "2px solid rgba(255,255,255,0.3)",
+    borderTop: "2px solid #ffffff",
     borderRadius: "50%",
   },
+
+  /* Success */
   successCard: {
-    backgroundColor: "#0d1a11",
-    border: "1px solid rgba(74,222,128,0.2)",
-    borderRadius: "24px",
-    padding: "48px",
+    backgroundColor: "#ffffff",
+    border: "1px solid #b7e4c7",
+    borderRadius: "20px",
+    padding: "48px 40px",
     textAlign: "center",
-    maxWidth: "400px",
+    maxWidth: "380px",
     width: "90%",
     position: "relative",
     zIndex: 1,
-    overflow: "hidden",
+    boxShadow: "0 8px 40px rgba(27,67,50,0.1)",
   },
-  successIcon: {
-    marginBottom: "20px",
+  successIconWrap: {
+    width: "72px",
+    height: "72px",
+    borderRadius: "50%",
+    backgroundColor: "#eef7f1",
+    border: "1px solid #b7e4c7",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto 24px",
   },
   successTitle: {
-    fontSize: "26px",
+    fontSize: "22px",
     fontWeight: "800",
-    color: "#ffffff",
-    margin: "0 0 12px 0",
+    color: "#1b4332",
+    margin: "0 0 10px",
     letterSpacing: "-0.5px",
   },
   successSubtitle: {
     fontSize: "14px",
-    color: "#666",
-    margin: "0 0 28px 0",
-    lineHeight: 1.6,
+    color: "#5c7a6b",
+    margin: "0 0 28px",
+    lineHeight: 1.65,
   },
-  successBar: {
+  successBarTrack: {
     height: "3px",
-    backgroundColor: "#4ade80",
+    backgroundColor: "#d8f3dc",
+    borderRadius: "2px",
+    overflow: "hidden",
+  },
+  successBarFill: {
+    height: "100%",
+    backgroundColor: "#2d6a4f",
     borderRadius: "2px",
   },
 };
