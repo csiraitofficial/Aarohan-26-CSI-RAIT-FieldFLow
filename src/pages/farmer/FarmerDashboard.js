@@ -15,7 +15,7 @@ import {
   Leaf, LogOut, Plus, Calendar, Clock, Users,
   MapPin, FileText, CheckCircle2, AlertCircle,
   Phone, User, Wallet, Sun, Sunset, Sunrise,
-  ClipboardList, Menu, X, Activity,
+  ClipboardList, Menu, X, Activity, Banknote,
 } from "lucide-react";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -24,6 +24,76 @@ L.Icon.Default.mergeOptions({
   iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
+
+// ─── Razorpay Key ───────────────────────────────────────────────────────────
+// Put your key in .env as VITE_RAZORPAY_KEY_ID
+// Test key looks like: rzp_test_XXXXXXXXXXXX
+// Live key looks like: rzp_live_XXXXXXXXXXXX
+// Paste your rzp_test_... key directly here:
+const RAZORPAY_KEY_ID = "rzp_test_REPLACE_WITH_YOUR_KEY";
+
+// ─── Load Razorpay checkout script once ─────────────────────────────────────
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) { resolve(true); return; }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload  = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
+// ─── Open Razorpay checkout ──────────────────────────────────────────────────
+// NOTE: In production you MUST create the order on a backend server using
+// your Razorpay Secret Key and pass the order_id here.
+// For a hackathon/test demo without a backend, we skip order_id creation
+// and Razorpay will still open in test mode — payments work fine for demos.
+// See the setup guide at the bottom of this file.
+function openRazorpay({ amount, farmerName, farmerPhone, description, onSuccess, onFailure }) {
+  return new Promise((resolve) => {
+    const options = {
+      key: RAZORPAY_KEY_ID,
+      amount: amount * 100,            // Razorpay takes paise (1 INR = 100 paise)
+      currency: "INR",
+      name: "KrishiSetu",
+      description: description,
+      image: "",                       // optional logo URL
+      prefill: {
+        name:    farmerName  || "",
+        contact: farmerPhone || "",
+      },
+      theme: { color: "#2d6a4f" },
+      modal: {
+        ondismiss: () => {
+          resolve({ success: false, reason: "dismissed" });
+        },
+      },
+      handler: function (response) {
+        // response contains:
+        // razorpay_payment_id  — always present on success
+        // razorpay_order_id    — only if you created an order server-side
+        // razorpay_signature   — only if you created an order server-side
+        resolve({
+          success: true,
+          paymentId: response.razorpay_payment_id,
+          orderId:   response.razorpay_order_id   || null,
+          signature: response.razorpay_signature  || null,
+        });
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.on("payment.failed", function (response) {
+      resolve({
+        success: false,
+        reason:  response.error?.description || "Payment failed",
+        code:    response.error?.code,
+      });
+    });
+    rzp.open();
+  });
+}
 
 const SLOT_CONFIG = {
   "8-12":  { label:"Morning",   time:"8:00 AM – 12:00 PM", icon:Sunrise, color:"#b45309", bg:"#fef9f0", border:"#fde68a", rate:300 },
@@ -47,6 +117,7 @@ export default function FarmerDashboard() {
   const [bookingSubTab, setBookingSubTab] = useState("live");
   const [loading,       setLoading]       = useState(false);
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("online"); // "online" | "cash"
   const [authChecked,   setAuthChecked]   = useState(false);
 
   // Form
@@ -66,11 +137,6 @@ export default function FarmerDashboard() {
 
   const navigate = useNavigate();
 
-  // ── AUTH PERSISTENCE FIX ──
-  // onAuthStateChanged waits for Firebase to rehydrate the session from
-  // IndexedDB/localStorage before deciding whether to redirect. The old
-  // auth.currentUser check fires before rehydration, so it's always null
-  // on a fresh page load → immediate logout.
   useEffect(() => {
     let unsubB1, unsubB2, unsubL;
 
@@ -100,7 +166,6 @@ export default function FarmerDashboard() {
     };
   }, [navigate]);
 
-  // Show nothing while Firebase checks auth (prevents flash-redirect)
   if (!authChecked) return null;
 
   const liveBookings        = bookings.filter(b => b.status === "assigned" && !(b.farmerConfirmed && b.supervisorConfirmed));
@@ -153,33 +218,131 @@ export default function FarmerDashboard() {
     } catch { setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`); }
   };
 
+  // ── SHARED: create booking doc ──────────────────────────────────────────────
+  const createBookingDoc = async ({ paymentStatus, paymentId = null, paymentOrderId = null, paymentSignature = null, paidAt = null }) => {
+    const user = auth.currentUser;
+    await addDoc(collection(db, "bookings"), {
+      farmerId:     user.uid,
+      farmerName:   farmerData?.name,
+      farmerPhone:  farmerData?.phone,
+      village:      farmerData?.village,
+      farmAddress:  address,
+      landmark,
+      farmLat,
+      farmLng,
+      labourCount,
+      timeSlot:     slot,
+      workType,
+      date,
+      description,
+      totalCost,
+      ratePerLabour,
+      status:       "pending",
+      supervisorId:    null,
+      supervisorName:  null,
+      supervisorPhone: null,
+      assignedLabour:      0,
+      assignedLabourIds:   [],
+      assignedLabourNames: [],
+      farmerConfirmed:     false,
+      supervisorConfirmed: false,
+      farmerAttendance:    {},
+      labourAttendance:    {},
+      paymentMethod,          // "online" | "cash"
+      paymentStatus,          // "paid" | "cash_on_delivery"
+      paymentId,
+      paymentOrderId,
+      paymentSignature,
+      paidAt,
+      createdAt: new Date(),
+    });
+  };
+
+  // ── PAYMENT + BOOKING FLOW ───────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Validate
     if (!date)           { toast.error("Please select a date!"); return; }
     if (!address.trim()) { toast.error("Please enter farm address!"); return; }
     if (availableNow === 0)         { toast.error("No labours available!"); return; }
     if (labourCount < 1)            { toast.error("Select at least 1 labour!"); return; }
     if (labourCount > availableNow) { toast.error(`Only ${availableNow} labours available!`); return; }
+
     setLoading(true);
+
     try {
-      const user = auth.currentUser;
-      await addDoc(collection(db,"bookings"), {
-        farmerId:user.uid, farmerName:farmerData?.name, farmerPhone:farmerData?.phone,
-        village:farmerData?.village, farmAddress:address, landmark,
-        farmLat, farmLng, labourCount, timeSlot:slot, workType, date, description,
-        totalCost, ratePerLabour, status:"pending",
-        supervisorId:null, supervisorName:null, supervisorPhone:null,
-        assignedLabour:0, assignedLabourIds:[], assignedLabourNames:[],
-        farmerConfirmed:false, supervisorConfirmed:false,
-        farmerAttendance:{},
-        labourAttendance:{},
-        createdAt:new Date(),
+      // ── CASH PATH ─────────────────────────────────────────────────────────
+      if (paymentMethod === "cash") {
+        await createBookingDoc({ paymentStatus: "cash_on_delivery" });
+        toast.success("Booking confirmed! Pay ₹" + totalCost.toLocaleString() + " in cash to the supervisor on the day.");
+        setDate(""); setAddress(""); setLandmark(""); setDescription("");
+        setLabourCount(1); setSlot("8-12"); setFarmLat(null); setFarmLng(null); setMapReady(false);
+        setActiveTab("bookings"); setBookingSubTab("unassigned");
+        setLoading(false);
+        return;
+      }
+
+      // ── ONLINE PATH ───────────────────────────────────────────────────────
+      if (!RAZORPAY_KEY_ID) {
+        toast.error("Razorpay key missing! Paste your key in FarmerDashboard.jsx line ~33.");
+        setLoading(false);
+        return;
+      }
+
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error("Payment gateway failed to load. Check your connection.");
+        setLoading(false);
+        return;
+      }
+
+      if (!window.Razorpay) {
+        await new Promise(r => setTimeout(r, 300));
+      }
+      if (!window.Razorpay) {
+        toast.error("Razorpay SDK unavailable. Refresh and try again.");
+        setLoading(false);
+        return;
+      }
+
+      const slotLabel = SLOT_CONFIG[slot]?.label || slot;
+      const paymentResult = await openRazorpay({
+        amount:      totalCost,
+        farmerName:  farmerData?.name,
+        farmerPhone: farmerData?.phone,
+        description: `KrishiSetu · ${labourCount} labour(s) · ${slotLabel} · ${date}`,
       });
-      toast.success("Booking submitted! 🌾");
+
+      if (!paymentResult.success) {
+        if (paymentResult.reason !== "dismissed") {
+          toast.error(`Payment failed: ${paymentResult.reason}`);
+        } else {
+          toast("Payment cancelled.", { icon: "ℹ️" });
+        }
+        setLoading(false);
+        return;
+      }
+
+      await createBookingDoc({
+        paymentStatus:   "paid",
+        paymentId:       paymentResult.paymentId,
+        paymentOrderId:  paymentResult.orderId  || null,
+        paymentSignature:paymentResult.signature || null,
+        paidAt:          new Date(),
+      });
+
+      toast.success("Payment successful! Booking submitted.");
       setDate(""); setAddress(""); setLandmark(""); setDescription("");
       setLabourCount(1); setSlot("8-12"); setFarmLat(null); setFarmLng(null); setMapReady(false);
       setActiveTab("bookings"); setBookingSubTab("unassigned");
-    } catch { toast.error("Failed to submit. Try again!"); }
+
+    } catch (err) {
+      console.error("🔴 KrishiSetu payment/booking error:", err);
+      const msg = err?.message || err?.toString() || "Unknown error";
+      toast.error(`Error: ${msg}`, { duration: 8000 });
+    }
+
     setLoading(false);
   };
 
@@ -243,6 +406,19 @@ export default function FarmerDashboard() {
                 ⚡ {booking.assignedLabour}/{booking.labourCount} filled
               </div>
             )}
+            {/* Payment badge */}
+            {booking.paymentStatus==="paid" && (
+              <div style={{ display:"flex", alignItems:"center", gap:4, background:"#f0fdf4", border:"1px solid #bbf7d0", padding:"3px 9px", borderRadius:20, fontSize:11, fontWeight:700, color:"#15803d" }}>
+                <CheckCircle2 size={10} strokeWidth={2.5}/>
+                Paid Online
+              </div>
+            )}
+            {booking.paymentStatus==="cash_on_delivery" && (
+              <div style={{ display:"flex", alignItems:"center", gap:4, background:"#fef9f0", border:"1px solid #fde68a", padding:"3px 9px", borderRadius:20, fontSize:11, fontWeight:700, color:"#92400e" }}>
+                <Banknote size={10} strokeWidth={2.5}/>
+                Cash on Day
+              </div>
+            )}
           </div>
           <span style={s.costTag}>₹{(booking.totalCost || (booking.labourCount*(SLOT_CONFIG[booking.timeSlot]?.rate||300))).toLocaleString()}</span>
         </div>
@@ -262,6 +438,15 @@ export default function FarmerDashboard() {
               <MapPin size={13} color="#2563eb" strokeWidth={2}/>
               <a href={`https://www.google.com/maps?q=${booking.farmLat},${booking.farmLng}`} target="_blank" rel="noopener noreferrer"
                 style={{ color:"#2d6a4f", fontSize:12, fontWeight:600, textDecoration:"none" }}>View on Maps ↗</a>
+            </div>
+          )}
+          {/* Payment ID row */}
+          {booking.paymentId && (
+            <div style={{...s.detailItem, gridColumn:"1/-1"}}>
+              <Wallet size={12} color="#9ca3af" strokeWidth={2}/>
+              <span style={{ fontFamily:"monospace", fontSize:11, color:"#9ca3af" }}>
+                {booking.paymentId}
+              </span>
             </div>
           )}
         </div>
@@ -368,10 +553,8 @@ export default function FarmerDashboard() {
         </div>
       )}
 
-      {/* Section label */}
       <div style={s.navSectionLabel}>Navigation</div>
 
-      {/* Nav items */}
       <nav style={{ padding:"0 10px", flex:1 }}>
         {[
           { id:"book",     icon:Plus,          label:"Book Labour",  badge:null },
@@ -397,9 +580,9 @@ export default function FarmerDashboard() {
             <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }}
               style={{ overflow:"hidden", marginLeft:8, paddingLeft:12, borderLeft:"2px solid #d8f3dc", marginTop:2 }}>
               {[
-                { id:"live",       icon:Activity,     label:"Live Work",      count:liveBookings.length,       activeColor:"#2d6a4f", activeBg:"#f0fdf4" },
-                { id:"completed",  icon:CheckCircle2, label:"Completed",      count:completedBookings.length,  activeColor:"#4f46e5", activeBg:"#f5f3ff" },
-                { id:"unassigned", icon:AlertCircle,  label:"Unassigned",     count:unassignedBookings.length, activeColor:"#92400e", activeBg:"#fef9f0" },
+                { id:"live",       icon:Activity,     label:"Live Work",   count:liveBookings.length,       activeColor:"#2d6a4f", activeBg:"#f0fdf4" },
+                { id:"completed",  icon:CheckCircle2, label:"Completed",   count:completedBookings.length,  activeColor:"#4f46e5", activeBg:"#f5f3ff" },
+                { id:"unassigned", icon:AlertCircle,  label:"Unassigned",  count:unassignedBookings.length, activeColor:"#92400e", activeBg:"#fef9f0" },
               ].map(sub => {
                 const Icon = sub.icon;
                 const isActive = bookingSubTab === sub.id;
@@ -419,7 +602,6 @@ export default function FarmerDashboard() {
         </AnimatePresence>
       </nav>
 
-      {/* Stats */}
       <div style={s.sidebarStats}>
         {[
           { val: bookings.length, label:"Total" },
@@ -433,7 +615,6 @@ export default function FarmerDashboard() {
         ))}
       </div>
 
-      {/* Logout */}
       <motion.button style={s.logoutBtn} onClick={handleLogout} whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}>
         <LogOut size={15} color="#dc2626" strokeWidth={2}/>
         <span style={{ color:"#dc2626", fontSize:13, fontWeight:600 }}>Sign Out</span>
@@ -727,17 +908,68 @@ export default function FarmerDashboard() {
                             value={description} onChange={e => setDescription(e.target.value)}/>
                         </div>
 
-                        {/* Submit */}
+                        {/* Payment Method Selector */}
+                        {!(date && availableNow === 0) && (
+                          <div style={{ background:"#fff", border:"1px solid #e4ede8", borderRadius:14, padding:16, boxShadow:"0 1px 8px rgba(27,67,50,0.05)" }}>
+                            <p style={{ fontSize:11, fontWeight:700, color:"#374151", textTransform:"uppercase", letterSpacing:"0.6px", marginBottom:10 }}>Payment Method</p>
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                              {/* Online */}
+                              <motion.button type="button"
+                                style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, padding:"13px 10px", borderRadius:12, cursor:"pointer", fontFamily:"inherit", border:`1.5px solid ${paymentMethod==="online"?"#2d6a4f":"#e4ede8"}`, background:paymentMethod==="online"?"#f0fdf4":"#fafcfb", transition:"all 0.15s", position:"relative" }}
+                                onClick={() => setPaymentMethod("online")}
+                                whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}>
+                                <Wallet size={20} color={paymentMethod==="online"?"#2d6a4f":"#9ca3af"} strokeWidth={2}/>
+                                <span style={{ fontSize:12, fontWeight:700, color:paymentMethod==="online"?"#1b4332":"#6b7280" }}>Pay Online</span>
+                                <span style={{ fontSize:10, color:"#9ca3af", textAlign:"center", lineHeight:1.3 }}>UPI · Card · Net banking</span>
+                                {paymentMethod==="online" && <div style={{ position:"absolute", top:8, right:10, width:7, height:7, borderRadius:"50%", background:"#2d6a4f" }}/>}
+                              </motion.button>
+                              {/* Cash */}
+                              <motion.button type="button"
+                                style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5, padding:"13px 10px", borderRadius:12, cursor:"pointer", fontFamily:"inherit", border:`1.5px solid ${paymentMethod==="cash"?"#b45309":"#e4ede8"}`, background:paymentMethod==="cash"?"#fef9f0":"#fafcfb", transition:"all 0.15s", position:"relative" }}
+                                onClick={() => setPaymentMethod("cash")}
+                                whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}>
+                                <Banknote size={20} color={paymentMethod==="cash"?"#b45309":"#9ca3af"} strokeWidth={2}/>
+                                <span style={{ fontSize:12, fontWeight:700, color:paymentMethod==="cash"?"#92400e":"#6b7280" }}>Cash</span>
+                                <span style={{ fontSize:10, color:"#9ca3af", textAlign:"center", lineHeight:1.3 }}>Pay supervisor on the day</span>
+                                {paymentMethod==="cash" && <div style={{ position:"absolute", top:8, right:10, width:7, height:7, borderRadius:"50%", background:"#b45309" }}/>}
+                              </motion.button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Submit button */}
                         <motion.button type="submit"
-                          style={{ ...s.submitBtn, background:(loading||(date&&availableNow===0))?"#e4ede8":"linear-gradient(135deg,#2d6a4f,#40916c)", color:(loading||(date&&availableNow===0))?"#9ca3af":"#fff", cursor:(date&&availableNow===0)?"not-allowed":"pointer", boxShadow:(loading||(date&&availableNow===0))?"none":"0 6px 22px rgba(45,106,79,0.30)" }}
+                          style={{ ...s.submitBtn,
+                            background: (loading||(date&&availableNow===0)) ? "#e4ede8"
+                              : paymentMethod==="cash" ? "linear-gradient(135deg,#92400e,#b45309)"
+                              : "linear-gradient(135deg,#2d6a4f,#40916c)",
+                            color:(loading||(date&&availableNow===0))?"#9ca3af":"#fff",
+                            cursor:(date&&availableNow===0)?"not-allowed":"pointer",
+                            boxShadow:(loading||(date&&availableNow===0))?"none"
+                              : paymentMethod==="cash" ? "0 6px 22px rgba(180,83,9,0.28)"
+                              : "0 6px 22px rgba(45,106,79,0.30)"
+                          }}
                           disabled={loading||(date&&availableNow===0)}
                           whileHover={{ scale:(loading||(date&&availableNow===0))?1:1.02, y:(loading||(date&&availableNow===0))?0:-2 }}
                           whileTap={{ scale:0.98 }}>
                           {loading
                             ? <motion.div style={{ width:18, height:18, border:"2px solid rgba(255,255,255,0.35)", borderTop:"2px solid #fff", borderRadius:"50%" }} animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:0.75, ease:"linear" }}/>
-                            : (date&&availableNow===0 ? "No Labours Available" : `Submit Booking · ₹${totalCost.toLocaleString()}`)
+                            : (date&&availableNow===0)
+                              ? "No Labours Available"
+                              : paymentMethod==="cash"
+                                ? `Confirm Booking · Pay ₹${totalCost.toLocaleString()} in Cash`
+                                : `Pay ₹${totalCost.toLocaleString()} Online & Book`
                           }
                         </motion.button>
+
+                        {/* Note below button */}
+                        {!(date && availableNow === 0) && (
+                          <p style={{ textAlign:"center", fontSize:11, color:"#9ca3af", marginTop:-8 }}>
+                            {paymentMethod==="cash"
+                              ? "Booking confirmed instantly · Pay cash to supervisor on work day"
+                              : "Secure payment via Razorpay · Booking confirmed after payment"}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </form>
@@ -761,9 +993,9 @@ export default function FarmerDashboard() {
                   {/* Sub-tabs */}
                   <div style={{ display:"flex", gap:8, marginBottom:24, flexWrap:"wrap" }}>
                     {[
-                      { id:"live",       label:"Live Work",      count:liveBookings.length,       activeBg:"#f0fdf4", activeBorder:"#52b788", activeColor:"#1b4332", dot:"#2d6a4f" },
-                      { id:"completed",  label:"Completed",      count:completedBookings.length,  activeBg:"#f5f3ff", activeBorder:"#c4b5fd", activeColor:"#3730a3", dot:"#6366f1" },
-                      { id:"unassigned", label:"Unassigned",     count:unassignedBookings.length, activeBg:"#fef9f0", activeBorder:"#fde68a", activeColor:"#92400e", dot:"#b45309" },
+                      { id:"live",       label:"Live Work",  count:liveBookings.length,       activeBg:"#f0fdf4", activeBorder:"#52b788", activeColor:"#1b4332", dot:"#2d6a4f" },
+                      { id:"completed",  label:"Completed",  count:completedBookings.length,  activeBg:"#f5f3ff", activeBorder:"#c4b5fd", activeColor:"#3730a3", dot:"#6366f1" },
+                      { id:"unassigned", label:"Unassigned", count:unassignedBookings.length, activeBg:"#fef9f0", activeBorder:"#fde68a", activeColor:"#92400e", dot:"#b45309" },
                     ].map(tab => {
                       const isActive = bookingSubTab === tab.id;
                       return (
@@ -831,7 +1063,6 @@ export default function FarmerDashboard() {
 
 // ── Design tokens ──
 const s = {
-  // Sidebar
   sidebarBrand:    { display:"flex", alignItems:"center", gap:10, padding:"22px 20px 18px" },
   sidebarLogoMark: { width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#2d6a4f,#1b4332)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:"0 2px 10px rgba(45,106,79,0.28)" },
   sidebarBrandName:{ fontSize:16, fontWeight:800, color:"#1b4332", letterSpacing:"-0.3px" },
@@ -852,16 +1083,12 @@ const s = {
   sidebarStats: { margin:"12px 12px 14px", padding:"14px 16px", background:"#f4fdf6", border:"1px solid #d8f3dc", borderRadius:14, display:"flex" },
   logoutBtn: { margin:"0 12px", padding:"11px 14px", background:"#fff0f0", border:"1px solid #fecaca", borderRadius:12, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, fontFamily:"inherit" },
 
-  availPill: { fontSize:12, color:"#2d6a4f", fontWeight:700, background:"#f0fdf4", padding:"4px 11px", borderRadius:20, border:"1px solid #b7e4c7" },
-
-  // Page layout
   pageHeader: { display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:26, flexWrap:"wrap", gap:12 },
   pageTitle:  { fontSize:"clamp(20px,4vw,26px)", fontWeight:800, color:"#1b4332", letterSpacing:"-0.5px" },
   pageSubtitle: { fontSize:13, color:"#8aab97", marginTop:4 },
   ratePill:   { display:"flex", alignItems:"center", gap:7, background:"#fff", border:"1.5px solid #e4ede8", padding:"8px 16px", borderRadius:24, fontSize:12, color:"#2d6a4f", fontWeight:600, boxShadow:"0 1px 5px rgba(27,67,50,0.05)", whiteSpace:"nowrap" },
   newBookingBtn: { display:"flex", alignItems:"center", gap:6, padding:"9px 18px", background:"#f4fdf6", border:"1.5px solid #52b788", borderRadius:10, color:"#2d6a4f", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" },
 
-  // Form cards
   formCard: { background:"#fff", border:"1px solid #e4ede8", borderRadius:16, padding:20, boxShadow:"0 1px 8px rgba(27,67,50,0.05)" },
   formCardHeader: { display:"flex", alignItems:"center", gap:9, marginBottom:14 },
   formCardIcon: { width:30, height:30, borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 },
@@ -881,7 +1108,6 @@ const s = {
 
   submitBtn: { width:"100%", padding:"15px", border:"none", borderRadius:12, fontSize:14, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:8, fontFamily:"'Poppins','Segoe UI',sans-serif", transition:"all 0.2s" },
 
-  // Booking cards
   bookingCard: { background:"#fff", border:"1px solid #e4ede8", borderRadius:16, padding:"18px 20px", boxShadow:"0 1px 6px rgba(27,67,50,0.05)", transition:"box-shadow 0.2s, transform 0.2s" },
   cardTopBar:  { display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 },
   cardDivider: { height:1, background:"#f0f4f2", margin:"14px 0" },
@@ -910,5 +1136,4 @@ const s = {
   emptyActionBtn: { padding:"11px 28px", background:"linear-gradient(135deg,#2d6a4f,#40916c)", border:"none", borderRadius:12, color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 4px 16px rgba(45,106,79,0.28)" },
 };
 
-// Helper for sub-tab info bar
 s.subTabInfo = (bg, border, color) => ({ display:"flex", alignItems:"center", gap:8, padding:"9px 14px", background:bg, border:`1px solid ${border}`, borderRadius:10, marginBottom:16, fontSize:12, color });
