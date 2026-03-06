@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { auth, db } from "../../firebase";
 import {
   collection, addDoc, query, where, doc,
@@ -15,6 +18,13 @@ import {
   ClipboardList, ChevronDown,
 } from "lucide-react";
 
+// Fix Leaflet default marker icon (common CRA issue)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 const SLOT_CONFIG = {
   "8-12": { label: "Morning", time: "8:00 AM – 12:00 PM", icon: Sunrise, color: "#f59e0b", rate: 300 },
@@ -28,11 +38,21 @@ const WORK_TYPES = [
   "📦 Loading", "📝 Other"
 ];
 
+// Allows clicking on the map to move the pin
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
 export default function FarmerDashboard() {
   const [farmerData, setFarmerData]   = useState(null);
   const [bookings, setBookings]       = useState([]);
   const [allLabours, setAllLabours]   = useState([]);
-  const [allBookings, setAllBookings] = useState([]); // ALL bookings for availability calc
+  const [allBookings, setAllBookings] = useState([]);
   const [activeTab, setActiveTab]     = useState("book");
   const [loading, setLoading]         = useState(false);
 
@@ -44,6 +64,12 @@ export default function FarmerDashboard() {
   const [address, setAddress]         = useState("");
   const [landmark, setLandmark]       = useState("");
   const [description, setDescription] = useState("");
+
+  // Live location / map
+  const [farmLat, setFarmLat]                   = useState(null);
+  const [farmLng, setFarmLng]                   = useState(null);
+  const [locationFetching, setLocationFetching] = useState(false);
+  const [mapReady, setMapReady]                 = useState(false);
 
   const navigate = useNavigate();
 
@@ -79,20 +105,15 @@ export default function FarmerDashboard() {
   }, [navigate]);
 
   // ── CORE AVAILABILITY LOGIC ──
-  // Returns count of labours available for a given date + slot
   const getAvailableCount = (checkDate, checkSlot) => {
     if (!checkDate || !checkSlot) return 0;
 
-    // Find all labour IDs already assigned for this date+slot
     const busyIds = new Set();
     allBookings.forEach(b => {
       if (b.status !== "assigned" && b.status !== "completed") return;
       if (b.date !== checkDate) return;
       if (!b.assignedLabourIds?.length) return;
 
-      // Slots overlap if:
-      // - same slot
-      // - either is fullday
       const overlaps =
         b.timeSlot === checkSlot ||
         b.timeSlot === "fullday" ||
@@ -103,13 +124,63 @@ export default function FarmerDashboard() {
       }
     });
 
-    // Available = labours that are marked available AND not busy for this slot
     return allLabours.filter(l => l.available === true && !busyIds.has(l.id)).length;
   };
 
   const availableNow = getAvailableCount(date, slot);
   const ratePerLabour = SLOT_CONFIG[slot]?.rate || 300;
   const totalCost = labourCount * ratePerLabour;
+
+  // ── FETCH LIVE LOCATION ──
+  const handleFetchLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported by your browser.");
+      return;
+    }
+    setLocationFetching(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setFarmLat(lat);
+        setFarmLng(lng);
+        setMapReady(true);
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+          );
+          const data = await res.json();
+          setAddress(data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          toast.success("📍 Live location fetched!");
+        } catch {
+          setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          toast.success("📍 Location pinned on map!");
+        }
+        setLocationFetching(false);
+      },
+      () => {
+        toast.error("Location access denied. Please allow location in browser.");
+        setLocationFetching(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  // ── MAP PIN DRAG / CLICK ──
+  const handleMapPinMove = async (lat, lng) => {
+    setFarmLat(lat);
+    setFarmLng(lng);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      );
+      const data = await res.json();
+      setAddress(data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+      toast.success("📍 Pin moved!");
+    } catch {
+      setAddress(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -131,6 +202,8 @@ export default function FarmerDashboard() {
         village:          farmerData?.village,
         farmAddress:      address,
         landmark,
+        farmLat:          farmLat,
+        farmLng:          farmLng,
         labourCount,
         timeSlot:         slot,
         workType,
@@ -153,6 +226,7 @@ export default function FarmerDashboard() {
       toast.success("Booking submitted successfully! 🌾");
       setDate(""); setAddress(""); setLandmark(""); setDescription("");
       setLabourCount(1); setSlot("8-12");
+      setFarmLat(null); setFarmLng(null); setMapReady(false);
       setActiveTab("bookings");
     } catch (err) {
       toast.error("Failed to submit. Try again!");
@@ -446,15 +520,120 @@ export default function FarmerDashboard() {
                       </div>
                     </div>
 
-                    {/* Farm Location */}
+                    {/* ── FARM LOCATION (with Live Map) ── */}
                     <div style={styles.card}>
-                      <div style={styles.cardHeader}><MapPin size={15} color="#4ade80" /><span style={styles.cardTitle}>Farm Location</span></div>
-                      <textarea style={{ ...styles.input, minHeight: "72px", resize: "vertical" }}
+                      <div style={styles.cardHeader}>
+                        <MapPin size={15} color="#4ade80" />
+                        <span style={styles.cardTitle}>Farm Location</span>
+                      </div>
+
+                      {/* GPS Button */}
+                      <motion.button
+                        type="button"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          width: "100%",
+                          padding: "11px 14px",
+                          marginBottom: "12px",
+                          backgroundColor: locationFetching
+                            ? "rgba(74,222,128,0.04)"
+                            : "rgba(74,222,128,0.1)",
+                          border: "1.5px solid rgba(74,222,128,0.3)",
+                          borderRadius: "9px",
+                          color: "#4ade80",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          cursor: locationFetching ? "not-allowed" : "pointer",
+                          fontFamily: "inherit",
+                        }}
+                        onClick={handleFetchLocation}
+                        disabled={locationFetching}
+                        whileHover={{ scale: locationFetching ? 1 : 1.02 }}
+                        whileTap={{ scale: locationFetching ? 1 : 0.97 }}
+                      >
+                        {locationFetching ? (
+                          <motion.div
+                            style={{
+                              width: 14,
+                              height: 14,
+                              border: "2px solid rgba(74,222,128,0.3)",
+                              borderTop: "2px solid #4ade80",
+                              borderRadius: "50%",
+                            }}
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                          />
+                        ) : (
+                          <MapPin size={14} />
+                        )}
+                        {locationFetching ? "Fetching your location..." : "📡 Use My Live Location"}
+                      </motion.button>
+
+                      {/* Leaflet Map — shown after GPS fetch */}
+                      {mapReady && farmLat && farmLng && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          style={{
+                            borderRadius: "10px",
+                            overflow: "hidden",
+                            marginBottom: "12px",
+                            border: "1px solid rgba(74,222,128,0.25)",
+                          }}
+                        >
+                          <MapContainer
+                            key={`${farmLat}-${farmLng}`}
+                            center={[farmLat, farmLng]}
+                            zoom={15}
+                            style={{ height: "210px", width: "100%" }}
+                            scrollWheelZoom={false}
+                          >
+                            <TileLayer
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              attribution='&copy; OpenStreetMap contributors'
+                            />
+                            <Marker position={[farmLat, farmLng]} />
+                            <MapClickHandler onLocationSelect={handleMapPinMove} />
+                          </MapContainer>
+
+                          {/* Coordinates bar under map */}
+                          <div style={{
+                            padding: "7px 12px",
+                            backgroundColor: "rgba(74,222,128,0.06)",
+                            borderTop: "1px solid rgba(74,222,128,0.15)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}>
+                            <span style={{ fontSize: "11px", color: "#4ade80", fontWeight: 600 }}>
+                              🗺️ Tap map to adjust pin
+                            </span>
+                            <span style={{ fontSize: "10px", color: "#555" }}>
+                              {farmLat?.toFixed(5)}, {farmLng?.toFixed(5)}
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Address textarea — auto-filled by GPS, editable */}
+                      <textarea
+                        style={{ ...styles.input, minHeight: "72px", resize: "vertical" }}
                         placeholder="Full farm address (village, taluka, district)..."
-                        value={address} onChange={e => setAddress(e.target.value)} required />
-                      <input style={{ ...styles.input, marginTop: "10px" }} type="text"
+                        value={address}
+                        onChange={e => setAddress(e.target.value)}
+                        required
+                      />
+
+                      <input
+                        style={{ ...styles.input, marginTop: "10px" }}
+                        type="text"
                         placeholder="Landmark (e.g. near Shiva temple, highway junction)"
-                        value={landmark} onChange={e => setLandmark(e.target.value)} />
+                        value={landmark}
+                        onChange={e => setLandmark(e.target.value)}
+                      />
                     </div>
 
                     {/* Notes */}
@@ -569,6 +748,20 @@ export default function FarmerDashboard() {
                             <div style={styles.bDetail}>
                               <MapPin size={13} color="#555" />
                               <span style={{ color: "#666" }}>📍 {booking.landmark}</span>
+                            </div>
+                          )}
+                          {/* Show map coords if available */}
+                          {booking.farmLat && booking.farmLng && (
+                            <div style={styles.bDetail}>
+                              <MapPin size={13} color="#4ade80" />
+                              <a
+                                href={`https://www.google.com/maps?q=${booking.farmLat},${booking.farmLng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: "#4ade80", fontSize: "12px", textDecoration: "none", fontWeight: 600 }}
+                              >
+                                📍 View on Google Maps
+                              </a>
                             </div>
                           )}
                         </div>
